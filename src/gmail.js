@@ -3165,7 +3165,7 @@ var Gmail = function(localJQuery) {
         var reply_to = ms13 ? ms13[4] : [];
 
         // if reply to set get email from it and return it
-        if (reply_to.length !== 0) {
+        if (Array.isArray(reply_to) && reply_to.length !== 0) {
             return api.tools.extract_email_address(reply_to[0]);
         }
 
