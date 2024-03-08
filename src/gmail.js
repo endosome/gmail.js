@@ -4180,7 +4180,9 @@ var Gmail = function(localJQuery) {
         */
         body: function(body) {
             var el = this.dom("body");
-            if(body) el.html(body);
+            if (body) {
+                el.get(0).innerHTML = body;
+            }
             return el.html();
         },
 
