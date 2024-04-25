@@ -9,7 +9,7 @@ function overrideHtml($el, content) {
     if (typeof content === "string") {
         $el.get(0).innerHTML = window.trustedTypesOverride.createHTML(content);
     } else {
-        $el.append(content);
+        $el.html(content);
     }
 
     return $el;
