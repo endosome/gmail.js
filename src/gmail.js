@@ -7,12 +7,157 @@
 /*eslint-env es6*/
 function overrideHtml($el, content) {
     if (typeof content === "string") {
-        $el.get(0).innerHTML = window.trustedTypesOverride.createHTML(content);
+        $el.get(0).innerHTML = content;
     } else {
         $el.html(content);
     }
 
     return $el;
+}
+
+function patchJQuery4ForGmail($) {
+    const $$ = function (...args) {
+        const instance = $(...args);
+        Object.setPrototypeOf(instance, $$.fn);
+        return instance;
+    };
+
+    Object.setPrototypeOf($$, $);
+    $$.fn = Object.create($.fn);
+    $$.fn.constructor = $$;
+
+    if (typeof $.isArray !== 'function') {
+        $$.isArray = Array.isArray;
+    }
+
+    if (typeof $.trim !== 'function') {
+        $$.trim = function (text) {
+            return text === null || text === undefined ? '' : String(text).trim();
+        };
+    }
+
+    if (typeof $.now !== 'function') {
+        $$.now = Date.now;
+    }
+
+    if (typeof $.parseJSON !== 'function') {
+        $$.parseJSON = function (str) {
+            return JSON.parse(str);
+        };
+    }
+
+    if (typeof $.isFunction !== 'function') {
+        $$.isFunction = function (obj) {
+            return typeof obj === 'function';
+        };
+    }
+
+    if (typeof $.isNumeric !== 'function') {
+        $$.isNumeric = function (value) {
+            if (value === null || value === undefined) return false;
+            if (typeof value === 'symbol') return false;
+            if (Array.isArray(value)) return false;
+
+            const str = typeof value === 'string' ? value.trim() : value;
+            if (str === '') return false;
+
+            return Number.isFinite(Number(str));
+        };
+    }
+
+    if (typeof $.type !== 'function') {
+        const toString = Object.prototype.toString;
+        $$.type = function (obj) {
+            if (obj === null || obj === undefined) return String(obj);
+            return toString.call(obj).slice(8, -1).toLowerCase();
+        };
+    }
+
+    if ($.fn && typeof $.fn.size !== 'function') {
+        $$.fn.size = function () {
+            return this.length;
+        };
+    }
+
+    if ($.fn && typeof $.fn.andSelf !== 'function' && typeof $.fn.addBack === 'function') {
+        $$.fn.andSelf = function (selector) {
+            return this.addBack(selector);
+        };
+    }
+
+    if (typeof $.fn.bind !== 'function') {
+        $$.fn.bind = function (types, data, fn) {
+            return this.on(types, null, data, fn);
+        };
+    }
+
+    if (typeof $.fn.unbind !== 'function') {
+        $$.fn.unbind = function (types, fn) {
+            return this.off(types, null, fn);
+        };
+    }
+
+    if (typeof $.fn.delegate !== 'function') {
+        $$.fn.delegate = function (selector, types, data, fn) {
+            return this.on(types, selector, data, fn);
+        };
+    }
+
+    if (typeof $.fn.undelegate !== 'function') {
+        $$.fn.undelegate = function (selector, types, fn) {
+            if (arguments.length === 0) return this.off();
+            return this.off(types, selector, fn);
+        };
+    }
+
+    if (typeof $.fn.hover !== 'function') {
+        $$.fn.hover = function (fnOver, fnOut) {
+            return this.on('mouseenter', fnOver).on('mouseleave', fnOut || fnOver);
+        };
+    }
+
+    if ($.fn) {
+        const originalLoad = $.fn.load;
+        $$.fn.load = function (data, handler) {
+            if (typeof data === 'string' && originalLoad) {
+                return originalLoad.apply(this, arguments);
+            }
+
+            if (arguments.length === 0) return this.trigger('load');
+
+            if (typeof data === 'function') {
+                handler = data;
+                data = undefined;
+            }
+
+            if (typeof handler === 'function') {
+                return this.on('load', null, data, handler);
+            }
+
+            return this.trigger('load', data);
+        };
+
+        ['error', 'unload'].forEach((eventName) => {
+            $$.fn[eventName] =
+                $.fn[eventName] ||
+                function (data, handler) {
+                    if (arguments.length === 0) return this.trigger(eventName);
+
+                    if (typeof data === 'function') {
+                        handler = data;
+                        data = undefined;
+                    }
+
+                    if (typeof handler === 'function') {
+                        return this.on(eventName, null, data, handler);
+                    }
+
+                    return this.trigger(eventName, data);
+                };
+        });
+    }
+
+    return $$;
 }
 
 var Gmail = function(localJQuery) {
@@ -25,9 +170,9 @@ var Gmail = function(localJQuery) {
     if (localJQuery === false) {
         // leave $ undefined, which may be fine for some purposes.
     } else if (typeof localJQuery !== "undefined") {
-        $ = localJQuery;
+        $ = patchJQuery4ForGmail(localJQuery);
     } else if (typeof jQuery !== "undefined") {
-        $ = jQuery;
+        $ = patchJQuery4ForGmail(jQuery);
     } else {
         throw new Error("GmailJS requires jQuery to be present in global scope or provided as a constructor argument.");
     }
