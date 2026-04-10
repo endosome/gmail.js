@@ -23,7 +23,7 @@
         "gmail firefox extension"
     ],
     "devDependencies": {
-        "@types/jquery": "^3.5.14",
+        "@types/jquery": "^4.0.0",
         "eslint": "^8.23.1",
         "jest": "^29.5.0",
         "jest-junit": "^17.0.0",

@@ -85,38 +85,64 @@ function patchJQuery4ForGmail($) {
         };
     }
 
-    if (typeof $.fn.bind !== 'function') {
+    if ($.fn && typeof $.fn.bind !== 'function') {
         $$.fn.bind = function (types, data, fn) {
             return this.on(types, null, data, fn);
         };
     }
 
-    if (typeof $.fn.unbind !== 'function') {
+    if ($.fn && typeof $.fn.unbind !== 'function') {
         $$.fn.unbind = function (types, fn) {
             return this.off(types, null, fn);
         };
     }
 
-    if (typeof $.fn.delegate !== 'function') {
+    if ($.fn && typeof $.fn.delegate !== 'function') {
         $$.fn.delegate = function (selector, types, data, fn) {
             return this.on(types, selector, data, fn);
         };
     }
 
-    if (typeof $.fn.undelegate !== 'function') {
+    if ($.fn && typeof $.fn.undelegate !== 'function') {
         $$.fn.undelegate = function (selector, types, fn) {
             if (arguments.length === 0) return this.off();
             return this.off(types, selector, fn);
         };
     }
 
-    if (typeof $.fn.hover !== 'function') {
+    if ($.fn && typeof $.fn.hover !== 'function') {
         $$.fn.hover = function (fnOver, fnOut) {
             return this.on('mouseenter', fnOver).on('mouseleave', fnOut || fnOver);
         };
     }
 
     if ($.fn) {
+        [
+            'blur', 'focus', 'focusin', 'focusout', 'resize', 'scroll', 'click',
+            'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout',
+            'mouseenter', 'mouseleave', 'change', 'select', 'submit', 'keydown',
+            'keypress', 'keyup', 'contextmenu'
+        ].forEach((eventName) => {
+            if (typeof $.fn[eventName] === 'function') {
+                return;
+            }
+
+            $$.fn[eventName] = function (data, handler) {
+                if (arguments.length === 0) return this.trigger(eventName);
+
+                if (typeof data === 'function') {
+                    handler = data;
+                    data = undefined;
+                }
+
+                if (typeof handler === 'function') {
+                    return this.on(eventName, null, data, handler);
+                }
+
+                return this.trigger(eventName, data);
+            };
+        });
+
         const originalLoad = $.fn.load;
         $$.fn.load = function (data, handler) {
             if (typeof data === 'string' && originalLoad) {
