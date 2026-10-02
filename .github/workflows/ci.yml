@@ -1,0 +1,111 @@
+# Generic CI for npm packages - copy as-is between packages.
+#
+# Contract with package.json scripts:
+#   lint, typecheck, build - optional, skipped when missing
+#   test                   - required
+#
+# The minimal supported Node.js version should match "engines" in package.json (if set).
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  schedule:
+    # weekly, to catch breakage from new Node.js releases / dependencies
+    # https://crontab.guru/#0_10_*_*_0
+    - cron: '0 10 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: 24
+        cache: npm
+    - run: npm ci --ignore-scripts --no-audit --no-fund
+    - run: npm run lint --if-present
+    - run: npm run typecheck --if-present
+
+  test:
+    name: Test (Node.js ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # the maintained LTS versions and the current release
+        node-version: [22, 24, 26]
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: npm
+    - run: npm ci --ignore-scripts --no-audit --no-fund
+    - run: npm run build --if-present
+    - run: npm test
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # checks what would actually be published: the tarball installs and loads in a fresh project
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: 24
+        cache: npm
+    - run: npm ci --ignore-scripts --no-audit --no-fund
+    - run: npm run build --if-present
+    - run: npm pack
+    - name: Install the tarball in a fresh project and load it
+      run: | # zizmor: ignore[adhoc-packages] installing the tarball we just built on purpose
+        PACKAGE_NAME="$(node -p "require('./package.json').name")"
+        mkdir ../consumer
+        cd ../consumer
+        npm init -y > /dev/null
+        npm install --ignore-scripts --no-audit --no-fund "$GITHUB_WORKSPACE"/*.tgz
+        npm ls "$PACKAGE_NAME"
+        node -e "require(process.argv[1])" "$PACKAGE_NAME"
+        node --input-type=module -e "await import(process.argv[1])" "$PACKAGE_NAME"
+
+  zizmor:
+    name: Audit workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+      with:
+        # print findings and fail instead of uploading SARIF (which needs security-events: write)
+        advanced-security: false

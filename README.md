@@ -1,7 +1,7 @@
 # Gmail.js - JavaScript API for Gmail
 
-![Node.js CI](https://github.com/KartikTalwar/gmail.js/actions/workflows/node.js.yml/badge.svg?branch=master)
-[![npm](https://img.shields.io/npm/v/gmail-js.svg)](https://www.npmjs.com/package/gmail-js)
+[![CI](https://github.com/endosome/gmail.js/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/endosome/gmail.js/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@endosome/gmail-js.svg)](https://www.npmjs.com/package/@endosome/gmail-js)
 
 ### What Gmail.js is and isn't
 
@@ -29,7 +29,7 @@ It cannot be used server-side with Node, or from another web-app to interface wi
 If you know how to create WebExtensions-based extensions for Firefox and Chrome, you can get started by pulling Gmail.js like this:
 
 ```
-npm install gmail-js
+npm install @endosome/gmail-js
 ```
 
 **Note:** Please ensure that Gmail.js is injected into the regular DOM.
@@ -50,7 +50,7 @@ Using gmail-js with TypeScript is relatively easy, but if you use normal `import
 will fail. Instead you need to use `require`-syntax to load it:
 
 ````typescript
-const GmailFactory = require("gmail-js");
+const GmailFactory = require("@endosome/gmail-js");
 const gmail = new GmailFactory.Gmail() as Gmail;
 // working on the gmail-object now provides type-safety.
 ````
@@ -58,7 +58,7 @@ const gmail = new GmailFactory.Gmail() as Gmail;
 You will also have to import the types somewhere, like in a file called `types.d.ts` in your project:
 
 ````typescript
-import "gmail-js";
+import "@endosome/gmail-js";
 ````
 
 

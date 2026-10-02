@@ -1,18 +1,23 @@
 {
-    "name": "gmail-js",
+    "name": "@endosome/gmail-js",
     "version": "1.1.16",
     "description": "JavaScript API for Gmail (useful for chrome extensions)",
     "main": "src/gmail.js",
     "types": "src/gmail.d.ts",
+    "files": [
+        "src/gmail.js",
+        "src/gmail.d.ts",
+        "CHANGELOG.md"
+    ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/KartikTalwar/gmail.js.git"
+        "url": "git+https://github.com/endosome/gmail.js.git"
     },
     "scripts": {
         "lint": "eslint src/*.js",
-        "tsc": "tsc src/*.ts",
+        "typecheck": "tsc src/*.ts",
         "test": "jest --watchAll=false --reporters=default --reporters=jest-junit",
-        "ci": "npm run tsc && npm run test && npm run lint"
+        "ci": "npm run typecheck && npm run test && npm run lint"
     },
     "keywords": [
         "gmail",
@@ -36,7 +41,10 @@
     "author": "Kartik Talwar",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/KartikTalwar/gmail.js/issues"
+        "url": "https://github.com/endosome/gmail.js/issues"
     },
-    "homepage": "https://github.com/KartikTalwar/gmail.js"
+    "homepage": "https://github.com/endosome/gmail.js",
+    "publishConfig": {
+        "access": "public"
+    }
 }
