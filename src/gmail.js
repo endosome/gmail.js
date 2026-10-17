@@ -4,7 +4,6 @@
 // https://github.com/KartikTalwar/gmail.js
 //
 
-/*eslint-env es6*/
 function overrideHtml($el, content) {
     if (typeof content === "string") {
         $el.get(0).innerHTML = content;
