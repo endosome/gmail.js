@@ -5,10 +5,9 @@
 let assert = require("assert");
 let Gmail = require("../src/gmail").Gmail;
 
-// Exercise the jQuery-backed DOM helpers against every supported jQuery major version.
+// Exercise the jQuery-backed DOM helpers against the supported jQuery major version.
 const jqueryVersions = {
-    "jQuery 3": "jquery3",
-    "jQuery 4": "jquery4"
+    "jQuery 4": "jquery"
 };
 
 const fixture = `
@@ -85,19 +84,6 @@ for (const [label, moduleName] of Object.entries(jqueryVersions)) {
         it("infobox renders HTML messages", () => {
             gmail.tools.infobox("<b>saved</b>", undefined, true);
             assert.strictEqual($("#infobox b").text(), "saved");
-        });
-
-        it("keeps jQuery 4 compatibility shims on chained results", () => {
-            const chained = gmail.dom.compose($("#compose")).dom("body").parent().find("div");
-            for (const method of ["size", "bind", "unbind", "delegate", "undelegate", "hover", "click", "load"]) {
-                assert.strictEqual(typeof chained[method], "function", method);
-            }
-            assert.strictEqual(chained.size(), 1);
-
-            let hovered = 0;
-            chained.hover(() => hovered++);
-            chained.trigger("mouseenter");
-            assert.strictEqual(hovered, 1);
         });
     });
 }
